@@ -1,0 +1,31 @@
+{
+  "name": "simplechain",
+  "version": "1.0.0",
+  "description": "Blockchain has the potential to change the way that the world approaches data. Develop Blockchain skills by understanding the data model behind Blockchain by developing your own simplified private blockchain.",
+  "main": "levelSandbox.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "start": "node server.js",
+  "author": "Deepak Gupta",
+  "license": "ISC",
+  "dependencies": {
+    "aa": "^0.1.40",
+    "bitcoinjs-message": "^2.0.0",
+    "crypto-js": "^3.1.9-1",
+    "hapi": "^17.5.4",
+    "hapi-swagger": "^9.1.1",
+    "inert": "^5.1.0",
+    "joi": "^13.6.0",
+    "level": "^4.0.0",
+    "vision": "^5.4.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepakmits/BlockchainStarNotaryService.git"
+  },
+  "bugs": {
+    "url": "https://github.com/deepakmits/BlockchainStarNotaryService/issues"
+  },
+  "homepage": "https://github.com/deepakmits/BlockchainStarNotaryService#readme"
+}
