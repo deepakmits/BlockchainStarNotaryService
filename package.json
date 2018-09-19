@@ -22,10 +22,19 @@
   },
   "repository": {
     "type": "git",
+<<<<<<< HEAD
     "url": "git+https://github.com/deepakmits/DeepSimpleBlockchain.git"
   },
   "bugs": {
     "url": "https://github.com/deepakmits/DeepSimpleBlockchain/issues"
   },
   "homepage": "https://github.com/deepakmits/DeepSimpleBlockchain#readme"
+=======
+    "url": "git+https://github.com/deepakmits/BlockchainStarNotaryService.git"
+  },
+  "bugs": {
+    "url": "https://github.com/deepakmits/BlockchainStarNotaryService/issues"
+  },
+  "homepage": "https://github.com/deepakmits/BlockchainStarNotaryService#readme"
+>>>>>>> 7e3998d0d44ab321a03d70aa5590dc0b530d8d12
 }

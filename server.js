@@ -15,7 +15,7 @@ const bitcoinMessage = require('bitcoinjs-message');
 //Create a server with a host and port
 const server=Hapi.server({
 	host:'localhost',
-	port:8001
+	port:8000
 });
 
 const swaggerOptions = {
