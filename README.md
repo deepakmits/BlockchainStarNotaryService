@@ -1,6 +1,11 @@
-# Blockchain Data
+# Blockchain based Star Notary Service
+Blockchain has the potential to change the way that the world approaches data. 
+Main functions - 
+  1. Register request for registration of Star.
+  2. Validate request with your signature.(also request is valid for 5 mins only, at a time one user/wallet address can have  one valid request).
+  3. Register your Star.
+  4. Look up your Star by address, hash and height.
 
-Blockchain has the potential to change the way that the world approaches data. Develop Blockchain skills by understanding the data model behind Blockchain by developing your own simplified private blockchain.
 
 ## Getting Started
 
@@ -28,62 +33,228 @@ npm install level --save
 ```
 npm install hapi --save
 ```
+- Install bitcoinjs-message to verify your signature  --save flag
+```
+npm install bitcoinjs-message --save
+```
 
 # REST End Points
-## GET Block end point
-Method Type : GET
 
-Description : Gets block at a given height
+## 1) Submit validation request using wallet address.
+    a) The web API will accept a Blockchain ID (The Blockchain ID is your wallet address, take a look again at Course 2 Blockchain Identity) with a request for star registration.
+    b) The users Blockchain ID will be stored with a timestamp.
+    c) This timestamp must be used to time wall the user request for star registration.
+    d) In the event the time expires, the address is removed from the validation routine forcing the user to restart the process.
 
-Validation : Height is required to get the block.
+## Method Type : POST
+## Description : Add validation request to blockchain.
+## URL - http://localhost:8000/requestValidation
+```
+curl -X "POST" "http://localhost:8000/requestValidation" \
+     -H 'Content-Type: application/json; charset=utf-8' \
+     -d $'{
+  "address": "142BDCeSGbXjWKaAnYXbMpZ6sbrSAo3DpZ"
+}'
+```
 
-URL - http://localhost:8000/block/{height}
-
-Curl - To get block at height 1
-```
-curl -X GET --header 'Accept: application/json' 'http://localhost:8000/block/1'
-```
-Request URL - To get block at height 1
-```
-http://localhost:8000/block/1
-```
-Response Body - Block in JSON Format
+## Response - 
+  Message details
+  Request timestamp
+  Time remaining for validation Window
 ```
 {
-  "hash": "ecb6600d95546adf1fd805b5fbf140f0e1b9ea1b74ba23ff625ba21d74d601cf",
+  "address": "142BDCeSGbXjWKaAnYXbMpZ6sbrSAo3DpZ",
+  "requestTimeStamp": "1532296090",
+  "message": "142BDCeSGbXjWKaAnYXbMpZ6sbrSAo3DpZ:1532296090:starRegistry",
+  "validationWindow": 300
+}
+```
+
+## 2) Validate Signature and Allow/Disallow user to register star
+    a) Identify yourself by signing message(message in previous request) with wallet address.
+    b) Application validates request and grant access to register star.
+  
+## Method Type : POST
+## Description : Validates the signature and establishes identity of submitter.
+## URL - http://localhost:8000/message-signature/validate
+```
+curl -X "POST" "http://localhost:8000/message-signature/validate" \
+     -H 'Content-Type: application/json; charset=utf-8' \
+     -d $'{
+  "address": "142BDCeSGbXjWKaAnYXbMpZ6sbrSAo3DpZ",
+  "signature": "H6ZrGrF0Y4rMGBMRT2+hHWGbThTIyhBS0dNKQRov9Yg6GgXcHxtO9GJN4nwD2yNXpnXHTWU9i+qdw5vpsooryLU="
+}'
+```
+
+## Response - 
+  Signature valid/invalid
+  Register Star true/false
+  Time remaining for validation Window
+```
+{
+  "registerStar": true,
+  "status": {
+    "address": "142BDCeSGbXjWKaAnYXbMpZ6sbrSAo3DpZ",
+    "requestTimeStamp": "1532296090",
+    "message": "142BDCeSGbXjWKaAnYXbMpZ6sbrSAo3DpZ:1532296090:starRegistry",
+    "validationWindow": 193,
+    "messageSignature": "valid"
+  }
+}
+```
+
+
+## 3) Register Star
+    a) Register your star passing your address and star with properties -
+        right_ascension
+        declination
+        magnitude [optional]
+        constellation [optional]
+        star_story [Hex encoded Ascii string limited to 250 words/500 bytes]
+    
+## Method Type : POST
+## Description : Registers star in blockchain
+## URL - http://localhost:8000/block
+```
+curl -X "POST" "http://localhost:8000/block" \
+     -H 'Content-Type: application/json; charset=utf-8' \
+     -d $'{
+  "address": "142BDCeSGbXjWKaAnYXbMpZ6sbrSAo3DpZ",
+  "star": {
+    "dec": "-26° 29'\'' 24.9",
+    "ra": "16h 29m 1.0s",
+    "story": "Found star using https://www.google.com/sky/"
+  }
+}'
+```
+
+## Response - 
+  Added block with star as body
+```
+{
+  "hash": "a59e9e399bc17c2db32a7a87379a8012f2c8e08dd661d7c0a6a4845d4f3ffb9f",
   "height": 1,
-  "body": "Test Block - 1",
-  "time": "1536583513",
-  "previousBlockHash": "5767439e14a8ce0c0c80de149817f4bba13162ccbd4659d1884ba29aeb867085"
+  "body": {
+    "address": "142BDCeSGbXjWKaAnYXbMpZ6sbrSAo3DpZ",
+    "star": {
+      "ra": "16h 29m 1.0s",
+      "dec": "-26° 29' 24.9",
+      "story": "466f756e642073746172207573696e672068747470733a2f2f7777772e676f6f676c652e636f6d2f736b792f"
+    }
+  },
+  "time": "1532296234",
+  "previousBlockHash": "49cce61ec3e6ae664514d5fa5722d86069cf981318fc303750ce66032d0acff3"
 }
 ```
 
-## Post Block end point
-Method Type : POST
 
-Description : Adds block to current blockchain,passing a block data as payload => {"body":"Block data"}
+## 4) Look up your stars by wallet address
+    a) Go thru the blockchain and collect all stars in list matching address.
+    
+## Method Type : GET
+## Description : Look up stars by address
+## URL - http://localhost:8000/stars/address/{address}
+```
+curl "http://localhost:8000/stars/address:142BDCeSGbXjWKaAnYXbMpZ6sbrSAo3DpZ"
+```
 
-Validation : Block can't be added if body is empty.
+## Response - 
+  List of stars matching the wallet address passed
+```
+[
+  {
+    "hash": "a59e9e399bc17c2db32a7a87379a8012f2c8e08dd661d7c0a6a4845d4f3ffb9f",
+    "height": 1,
+    "body": {
+      "address": "142BDCeSGbXjWKaAnYXbMpZ6sbrSAo3DpZ",
+      "star": {
+        "ra": "16h 29m 1.0s",
+        "dec": "-26° 29' 24.9",
+        "story": "466f756e642073746172207573696e672068747470733a2f2f7777772e676f6f676c652e636f6d2f736b792f",
+        "storyDecoded": "Found star using https://www.google.com/sky/"
+      }
+    },
+    "time": "1532296234",
+    "previousBlockHash": "49cce61ec3e6ae664514d5fa5722d86069cf981318fc303750ce66032d0acff3"
+  },
+  {
+    "hash": "6ef99fc533b9725bf194c18bdf79065d64a971fa41b25f098ff4dff29ee531d0",
+    "height": 2,
+    "body": {
+      "address": "142BDCeSGbXjWKaAnYXbMpZ6sbrSAo3DpZ",
+      "star": {
+        "ra": "17h 22m 13.1s",
+        "dec": "-27° 14' 8.2",
+        "story": "466f756e642073746172207573696e672068747470733a2f2f7777772e676f6f676c652e636f6d2f736b792f",
+        "storyDecoded": "Found star using https://www.google.com/sky/"
+      }
+    },
+    "time": "1532330848",
+    "previousBlockHash": "a59e9e399bc17c2db32a7a87379a8012f2c8e08dd661d7c0a6a4845d4f3ffb9f"
+  }
+]
+```
 
-URL - http://localhost:8000/block
 
-Curl - To add block
+## 5) Look up your stars by block hash
+    a) Go thru the blockchain and get the star by block hash
+    
+## Method Type : GET
+## Description : Look up stars by block hash
+## URL - http://localhost:8000/stars/hash/{hash}
 ```
-curl -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' -d '{
-  "body": "deep chain"
-}' 'http://localhost:8000/block'
+curl "http://localhost:8000/stars/hash:a59e9e399bc17c2db32a7a87379a8012f2c8e08dd661d7c0a6a4845d4f3ffb9f"
 ```
-Request URL - To add block
-```
-http://localhost:8000/block
-```
-Response Body - Added Block in JSON Format
+
+## Response - 
+  Block having star as body matched by block hash
 ```
 {
-  "hash": "6f470d29f1ee4e9a1f1bf48f0f9468085564c0046cc92976895c2993c2736a09",
-  "height": 10,
-  "body": "deep chain",
-  "time": "1536599269",
-  "previousBlockHash": "a2888555fdcf8ab889711916ff8cffe8786ab20159554a8617b0779d8a05d35f"
+  "hash": "a59e9e399bc17c2db32a7a87379a8012f2c8e08dd661d7c0a6a4845d4f3ffb9f",
+  "height": 1,
+  "body": {
+    "address": "142BDCeSGbXjWKaAnYXbMpZ6sbrSAo3DpZ",
+    "star": {
+      "ra": "16h 29m 1.0s",
+      "dec": "-26° 29' 24.9",
+      "story": "466f756e642073746172207573696e672068747470733a2f2f7777772e676f6f676c652e636f6d2f736b792f",
+      "storyDecoded": "Found star using https://www.google.com/sky/"
+    }
+  },
+  "time": "1532296234",
+  "previousBlockHash": "49cce61ec3e6ae664514d5fa5722d86069cf981318fc303750ce66032d0acff3"
 }
 ```
+
+
+## 6) Look up your stars by block height
+    a) Go thru the blockchain and get the star by block height
+    
+## Method Type : GET
+## Description : Look up stars by block height
+## URL - http://localhost:8000/stars/block/{height}
+```
+curl "http://localhost:8000/stars/block/1
+```
+## Response - 
+  Block having height passed
+```
+{
+  "hash": "a59e9e399bc17c2db32a7a87379a8012f2c8e08dd661d7c0a6a4845d4f3ffb9f",
+  "height": 1,
+  "body": {
+    "address": "142BDCeSGbXjWKaAnYXbMpZ6sbrSAo3DpZ",
+    "star": {
+      "ra": "16h 29m 1.0s",
+      "dec": "-26° 29' 24.9",
+      "story": "466f756e642073746172207573696e672068747470733a2f2f7777772e676f6f676c652e636f6d2f736b792f",
+      "storyDecoded": "Found star using https://www.google.com/sky/"
+    }
+  },
+  "time": "1532296234",
+  "previousBlockHash": "49cce61ec3e6ae664514d5fa5722d86069cf981318fc303750ce66032d0acff3"
+}
+```
+
+
+## Documentation URL - http://localhost:8000/documentation#/
