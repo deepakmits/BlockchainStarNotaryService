@@ -168,38 +168,38 @@ server.route({
 });
 
 //http://localhost:8000/chain/block/0 
-server.route({
-	method:'GET',
-	path:'/chain/block/{height}',
-	config:{
-		tags: ['api'],
-		description: 'Get Block at a given height',
-		notes: 'Get Block at a given height, returns Block as JSON',
-		validate: {
-			params: {
-				height : Joi.number()
-				.required(),
-			}
-		},
-		handler:async (request, h) => {
-			let height = encodeURIComponent(request.params.height);
-			let retBlock = await deepChain.getBlock(height).then((block) => {
-				return block;
-			}).catch((err) => {
-				console.log('Deep chain could not find required block '+height , err);
-				return errorHandler(request, h, 'Deep chain could not find required block '+height);
-			});
-
-			return h.response(retBlock).type('application/json');
-		}
-	}
-});
+//server.route({
+//	method:'GET',
+//	path:'/chain/block/{height}',
+//	config:{
+//		tags: ['api'],
+//		description: 'Get Block at a given height',
+//		notes: 'Get Block at a given height, returns Block as JSON',
+//		validate: {
+//			params: {
+//				height : Joi.number()
+//				.required(),
+//			}
+//		},
+//		handler:async (request, h) => {
+//			let height = encodeURIComponent(request.params.height);
+//			let retBlock = await deepChain.getBlock(height).then((block) => {
+//				return block;
+//			}).catch((err) => {
+//				console.log('Deep chain could not find required block '+height , err);
+//				return errorHandler(request, h, 'Deep chain could not find required block '+height);
+//			});
+//
+//			return h.response(retBlock).type('application/json');
+//		}
+//	}
+//});
 
 
 //http://localhost:8000/chain/block/0 
 server.route({
 	method:'GET',
-	path:'/block/{height}',
+	path:'/stars/block/{height}',
 	config:{
 		tags: ['api'],
 		description: 'Get Star at a given height',
@@ -230,7 +230,7 @@ server.route({
 //http://localhost:8000/chain/block
 server.route({
 	method:'POST',
-	path:'/chain/block',
+	path:'/block',
 	config:{
 		tags: ['api'],
 		description: 'Add Block to current Blockchain',
