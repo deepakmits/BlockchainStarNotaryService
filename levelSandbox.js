@@ -4,7 +4,7 @@
 /* jshint esversion:6 */
 
 const level = require('level');
-const chainDB = './chaindata';
+const chainDB = './chaindata';    //star chain
 const db = level(chainDB);
 var exports = module.exports;
 

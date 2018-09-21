@@ -7,7 +7,12 @@ const HapiSwagger = require('hapi-swagger');
 const Hapi=require('hapi');
 const Blockchain = require('./Blockchain');
 const Block = require('./Block');
-const deepChain = new Blockchain();
+const deepChain = new Blockchain();   //star data stored in this blockchain
+//request database
+const level = require('level');
+const starRequestDB = './starRequestDB';
+const srdb = level(starRequestDB)
+
 const ValidationRequest = require('./ValidationRequest');
 const ldb = require('./levelSandbox');
 const bitcoinMessage = require('bitcoinjs-message');
@@ -233,8 +238,8 @@ server.route({
 	path:'/block',
 	config:{
 		tags: ['api'],
-		description: 'Add Block to current Blockchain',
-		notes: 'Adds Block to current Blockchain, passing a block data as payload => {"body":"Block data"}',
+		description: 'Add Star to current Blockchain',
+		notes: 'Adds Star to current Blockchain, passing a block data as payload => {"body":"Block data"}',
 		validate: {
 			payload: {
 				body : Joi.object()
@@ -264,8 +269,6 @@ server.route({
 });
 
 
-
-
 //http://localhost:8000/chain/message-signature/validate
 server.route({
 	method:'POST',
@@ -292,16 +295,18 @@ server.route({
 				return errorHandler(request, h, 'Wallet address and signature are required to be passed.');
 
 			let address = encodeURIComponent(request.payload.address);
-			let signature = request.payload.signature;
-			//get exsiting validation request by address
-			let existingValidationReq = await deepChain.getBlock(address).then((block) => {
+			let signature = request.payload.signature;			
+			
+			let existingValidationReq = await srdb.get(address).then((block) => {
 				console.log('got block with address : '+block);
 				if(block.address === '')
 					return null;
-				return block;
+				return JSON.parse(block);
 			}).catch((err) => {
-				console.log('Deep chain could not get validation request block', err);
+				console.log('Validation request could not be found with given address.', err);
+				errorHandler(request, h, 'Validation request could not be found with given address.',err);
 			});
+
 			console.log("got requested block : "+JSON.stringify(existingValidationReq));
 			let jsonResponse = null;
 			if(existingValidationReq != null){
@@ -311,11 +316,9 @@ server.route({
 						existingValidationReq.message,existingValidationReq.validationWindow);
 
 				if(existingVR.isRequestValid()){
-					console.log('Valid Request');
 					let verified = false;
 					try{
 						verified = bitcoinMessage.verify(existingVR.message,address,signature);
-						console.log('verified'+verified);
 					}catch(err){
 						console.log(err);
 						errorHandler(request, h, 'Message could not be verified with Address and Signature.',err);
@@ -356,7 +359,6 @@ server.route({
 });
 
 
-
 //http://localhost:8000/chain/requestValidation
 server.route({
 	method:'POST',
@@ -379,15 +381,14 @@ server.route({
 				return errorHandler(request, h, 'Walllet address is required to be passed.');
 
 			let address = encodeURIComponent(request.payload.address);
-			let validationRequest = await deepChain.getBlock(address).then((block) => {
+			let validationRequest = await srdb.get(address).then((block) => {
 				console.log('got block with address : '+block);
 				if(block.address === '')
 					return null;
-				return block;
+				return JSON.parse(block);
 			}).catch((err) => {
-				console.log('Deep chain could not add validation request block', err);
+				console.log('Validation request not found for given address.', err);
 			});
-			//console.log('type of '+typeof validationRequest);
 			if(validationRequest === null || typeof validationRequest === 'undefined'){
 				validationRequest = new ValidationRequest(address);
 				console.log('New Valiation Request to be added : '+JSON.stringify(validationRequest));
@@ -405,8 +406,9 @@ server.route({
 				}
 				validationRequest = valReq;
 			}
-			let val = await ldb.addLevelDBData(address, JSON.stringify(validationRequest)).then((value)=>{
-				return value;
+			let val = await srdb.put(address, JSON.stringify(validationRequest)).then((value)=>{
+				console.log('Returning req after adding.')
+				return JSON.stringify(validationRequest);
 			}).catch((err => {
 				console.log();
 				errorHandler(request, h, 'Validation Request could not be added ',err);
@@ -415,6 +417,8 @@ server.route({
 		}
 	}
 });
+
+
 
 
 function errorHandler(request, h, errMsg) {

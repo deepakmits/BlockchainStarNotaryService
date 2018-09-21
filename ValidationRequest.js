@@ -54,7 +54,6 @@ class ValidationRequest{
 	 * true if request is still valid
 	 */
 	isRequestValid(){
-		console.log("checking validity"+this.remainingTimeWindow() >= 0);
 		return this.remainingTimeWindow() >= 0;
 	}
 
