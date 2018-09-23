@@ -232,9 +232,9 @@ curl "http://localhost:8000/stars/hash:a59e9e399bc17c2db32a7a87379a8012f2c8e08dd
     
 ## Method Type : GET
 ## Description : Look up stars by block height
-## URL - http://localhost:8000/stars/block/{height}
+## URL - http://localhost:8000/block/{height}
 ```
-curl "http://localhost:8000/stars/block/1
+curl "http://localhost:8000/block/1
 ```
 ## Response - 
   Block having height passed
