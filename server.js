@@ -250,7 +250,7 @@ server.route({
 				});
 				
 				valReqBlock.registerStar = false;
-				let val = await srdb.put(address, JSON.stringify(valReqBlock)).then((value)=>{
+				let val = await srdb.put(blockBody.address, JSON.stringify(valReqBlock)).then((value)=>{
 					console.log('Invalidating current request after registering a Star.');
 					return JSON.stringify(valReqBlock);
 				}).catch((err => {
@@ -307,15 +307,12 @@ server.route({
 
 			let existingValidationReq = await srdb.get(address).then((block) => {
 				console.log('got block with address : '+block);
-				if(block.address === '')
-					return null;
 				return JSON.parse(block);
 			}).catch((err) => {
 				console.log('Validation request could not be found with given address.', err);
-				errorHandler(request, h, 'Validation request could not be found with given address.',err);
-			});
+				return errorHandler(request, h, 'Validation request could not be found with given address.');
+			})
 
-			console.log("got requested block : "+JSON.stringify(existingValidationReq));
 			let jsonResponse = null;
 			if(existingValidationReq != null){
 				let existingVR = new ValidationRequest(existingValidationReq.address);
@@ -342,18 +339,19 @@ server.route({
 
 							let val = await srdb.put(address, JSON.stringify(jsonResponse)).then((value)=>{
 								console.log('Returning req after adding.')
-								return JSON.stringify(validationRequest);
+								return JSON.stringify(jsonResponse);
 							}).catch((err => {
-								console.log();
-								errorHandler(request, h, 'Validation Request could not be added ',err);
+								console.log('Validation Request could not be added'+err);
+								return errorHandler(request, h, 'Validation Request could not be added ',err);
 							}));
 
 						}else{
-							errorHandler(request, h, 'Message could not be verified with Address and Signature.');
+							console.log('Message could not be verified with Address and Signature.')
+							return errorHandler(request, h, 'Message could not be verified with Address and Signature.');
 						}
 					}catch(err){
-						console.log(err);
-						errorHandler(request, h, 'Message could not be verified with Address and Signature.',err);
+						console.log('Message could not be verified with Address and Signature.'+err);
+						return errorHandler(request, h, 'Message could not be verified with Address and Signature.',err);
 					}
 
 				}else{
@@ -419,8 +417,8 @@ server.route({
 				console.log('Returning req after adding.')
 				return JSON.stringify(validationRequest);
 			}).catch((err => {
-				console.log();
-				errorHandler(request, h, 'Validation Request could not be added ',err);
+				console.log('Validation Request could not be added.'+err);
+				return errorHandler(request, h, 'Validation Request could not be added.');
 			}));
 			return h.response(val).type('application/json');
 		}

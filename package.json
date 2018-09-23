@@ -22,7 +22,6 @@
   },
   "repository": {
     "type": "git",
-
     "url": "git+https://github.com/deepakmits/BlockchainStarNotaryService.git"
   },
   "bugs": {

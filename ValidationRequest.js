@@ -45,7 +45,7 @@ class ValidationRequest{
 	 * get remaining time window
 	 */
 	remainingTimeWindow(){
-		let time = (parseInt(this.requestTimeStamp, 10) + this.validationWindow) - this.currentTimeStamp();
+		let time = (parseInt(this.requestTimeStamp, 10) + defaultWindow) - this.currentTimeStamp();
 		return time;
 	}
 
